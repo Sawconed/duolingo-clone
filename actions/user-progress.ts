@@ -15,6 +15,7 @@ export const upsertUserProgress = async (courseId: number) => {
   // Check if user has logged in
   if (!userId || !user) {
     throw new Error("Unauthorized");
+    console.log("a")
   }
 
   // Check if course existed
@@ -22,6 +23,7 @@ export const upsertUserProgress = async (courseId: number) => {
 
   if (!course) {
     throw new Error("Course not found");
+    console.log("b")
   }
 
   // Check if course is empty
@@ -50,7 +52,6 @@ export const upsertUserProgress = async (courseId: number) => {
     userName: user.firstName || "User",
     userImageSrc: user.imageUrl || "/mascot.svg",
   })
-
   revalidatePath("/courses");
   revalidatePath("/learn");
   redirect("/learn");
