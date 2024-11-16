@@ -19,10 +19,12 @@ export const getUserProgress = cache(async () => {
   return data;
 })
 
+// TODO: Confirm whether order is needed
 export const getUnits = cache(async () => {
+  const { userId } = await auth();
   const userProgress = await getUserProgress();
 
-  if (!userProgress?.activeCourseId) {
+  if (!userId || !userProgress?.activeCourseId) {
     return [];
   }
 
@@ -32,7 +34,11 @@ export const getUnits = cache(async () => {
       lessons: {
         with: {
           challenges: {
-            with: { challengeProgress: true }
+            with: {
+              challengeProgress: {
+                where: eq(challengeProgress.userId, userId)
+              }
+            }
           }
         }
       }
