@@ -1,14 +1,13 @@
 "use server";
 
+import { POINTS_TO_REFILL } from "@/constants";
 import db from "@/db/drizzle";
-import { getCouseById, getUserProgress } from "@/db/queries";
+import { getCouseById, getUserProgress, getUserSubscription } from "@/db/queries";
 import { challengeProgress, challenges, userProgress } from "@/db/schema";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-const POINTS_TO_REFILL = 10;
 
 export const upsertUserProgress = async (courseId: number) => {
   const { userId } = await auth();
@@ -18,7 +17,6 @@ export const upsertUserProgress = async (courseId: number) => {
   // Check if user has logged in
   if (!userId || !user) {
     throw new Error("Unauthorized");
-    console.log("a")
   }
 
   // Check if course existed
@@ -26,14 +24,12 @@ export const upsertUserProgress = async (courseId: number) => {
 
   if (!course) {
     throw new Error("Course not found");
-    console.log("b")
   }
 
   // Check if course is empty
-  // TODO: This portion will be uncomment once the shema for course is updated
-  // if (!course.units.length || !course.units[0].lessons.length) {
-  //   throw new Error("Course is empty");
-  // }
+  if (!course.units.length || !course.units[0].lessons.length) {
+    throw new Error("Course is empty");
+  }
 
   // Check if current user has any progress
   const existingUserProgress = await getUserProgress();
@@ -66,6 +62,7 @@ export const reduceHearts = async (challengeId: number) => {
   if (!userId) throw new Error("Unauthorized");
 
   const currentUserProgress = await getUserProgress();
+  const userSubscription = await getUserSubscription();
 
   if (!currentUserProgress) throw new Error("User progress not found");
 
@@ -88,7 +85,8 @@ export const reduceHearts = async (challengeId: number) => {
 
   if (isPractice) return { error: "practice" };
 
-  // TODO: Handle user with subscription
+  if (userSubscription?.isActive) return { error: "subscription" };
+
 
   if (currentUserProgress.hearts === 0) return { error: "hearts" };
 

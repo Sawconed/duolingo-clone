@@ -2,26 +2,31 @@ import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { Header } from "./header";
 import { UserProgress } from "@/components/user-progress";
-import { getCouseProgress, getLessonPercentage, getUnits, getUserProgress } from "@/db/queries";
+import { getCouseProgress, getLessonPercentage, getUnits, getUserProgress, getUserSubscription } from "@/db/queries";
 import { redirect } from "next/navigation";
 import { Unit } from "./unit";
+import { Promo } from "@/components/promo";
+import { Quests } from "@/components/quests";
 
 const Learn = async () => {
   const userProgressData = getUserProgress();
   const courseProgressData = getCouseProgress();
   const lessonPercentageData = getLessonPercentage();
   const unitsData = getUnits();
+  const userSubscriptionData = getUserSubscription();
 
   const [
     userProgress,
     units,
     courseProgress,
-    lessonPercentage
+    lessonPercentage,
+    userSubscription
   ] = await Promise.all([
     userProgressData,
     unitsData,
     courseProgressData,
-    lessonPercentageData
+    lessonPercentageData,
+    userSubscriptionData
   ]);
 
   if (!userProgress || !userProgress.activeCourse) {
@@ -39,8 +44,10 @@ const Learn = async () => {
           activeCourses={userProgress.activeCourse}
           hearts={userProgress.hearts}
           points={userProgress.points}
-          hasActiveSubscription={false}
+          hasActiveSubscription={!!userSubscription?.isActive}
         />
+        {!userSubscription?.isActive && <Promo />}
+        <Quests points={userProgress.points} />
       </StickyWrapper>
 
       <FeedWrapper>
